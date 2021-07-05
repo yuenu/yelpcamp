@@ -30,7 +30,10 @@ const seedDB = async () => {
       author: '60dd2999f33e1d2db8d19ce1',
       location: `${cities[random1000].city}, ${cities[random1000].state}`,
       title: `${sample(descriptors)} ${sample(places)}`,
-      image: "https://source.unsplash.com/collection/483251",
+      images: {
+        url: "https://source.unsplash.com/collection/483251",
+        filename: "campground image"
+      },
       description:
         "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
       price,

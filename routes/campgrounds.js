@@ -5,11 +5,16 @@ const campgroundsController = require("../controllers/campgrounds");
 
 const { isLoggedIn, isAuthor, validateCamground } = require("../middleware");
 
+const multer = require("multer");
+const { storage } = require('../cloudinary')
+const upload = multer({ storage });
+
 router
   .route("/")
   .get(catchAsync(campgroundsController.index))
   .post(
     isLoggedIn,
+    upload.array('image'),
     validateCamground,
     catchAsync(campgroundsController.createCampground)
   );
@@ -22,6 +27,7 @@ router
   .put(
     isLoggedIn,
     isAuthor,
+    upload.array('image'),
     validateCamground,
     catchAsync(campgroundsController.updateCampground)
   )
