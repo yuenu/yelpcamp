@@ -18,7 +18,7 @@ const LocalStrategy = require("passport-local");
 const helmet = require("helmet");
 
 const ExpressError = require("./utils/ExpressError");
-const MongoStore = require('connect-mongo');
+const MongoStore = require("connect-mongo");
 
 // Model
 const User = require("./models/user");
@@ -54,18 +54,18 @@ app.use(methodOverride("_method"));
 app.use(morgan("tiny"));
 app.use(express.static(path.join(__dirname, "public")));
 
-const secretKey = process.env.SECRET_KEY || 'thisisabetterser'
+const secretKey = process.env.SECRET_KEY || "thisisabetterser";
 
 // Session setting & flash
 const store = new MongoStore({
   mongoUrl: dbUrl,
   secret: secretKey,
-  touchAfter: 60 * 60
-})
+  touchAfter: 60 * 60,
+});
 
-store.on('error', function (err) {
-  console.log('SESSION STORE ERROR', err)
-})
+store.on("error", function (err) {
+  console.log("SESSION STORE ERROR", err);
+});
 
 const sessionConfig = {
   store,
@@ -85,7 +85,7 @@ app.use(flash());
 app.use(mongoSanitize());
 
 // Helmet
-app.use(helmet())
+app.use(helmet());
 const scriptSrcUrls = [
   "https://api.mapbox.com",
   "https://cdnjs.cloudflare.com",
@@ -104,27 +104,26 @@ const connectSrcUrls = [
 const fontSrcUrls = [];
 app.use(
   helmet.contentSecurityPolicy({
-      directives: {
-          defaultSrc: [],
-          connectSrc: ["'self'", ...connectSrcUrls],
-          scriptSrc: ["'unsafe-inline'", "'self'", ...scriptSrcUrls],
-          styleSrc: ["'self'", "'unsafe-inline'", ...styleSrcUrls],
-          workerSrc: ["'self'", "blob:"],
-          childSrc: ["blob:"],
-          objectSrc: [],
-          imgSrc: [
-              "'self'",
-              "blob:",
-              "data:",
-              "https://res.cloudinary.com/dojhkxto5/", //SHOULD MATCH YOUR CLOUDINARY ACCOUNT! 
-              "https://images.unsplash.com",
-              "https://source.unsplash.com",
-          ],
-          fontSrc: ["'self'", ...fontSrcUrls],
-      },
+    directives: {
+      defaultSrc: [],
+      connectSrc: ["'self'", ...connectSrcUrls],
+      scriptSrc: ["'unsafe-inline'", "'self'", ...scriptSrcUrls],
+      styleSrc: ["'self'", "'unsafe-inline'", ...styleSrcUrls],
+      workerSrc: ["'self'", "blob:"],
+      childSrc: ["blob:"],
+      objectSrc: [],
+      imgSrc: [
+        "'self'",
+        "blob:",
+        "data:",
+        "https://res.cloudinary.com/dojhkxto5/", //SHOULD MATCH YOUR CLOUDINARY ACCOUNT!
+        "https://images.unsplash.com",
+        "https://source.unsplash.com",
+      ],
+      fontSrc: ["'self'", ...fontSrcUrls],
+    },
   })
 );
-
 
 // Passport
 app.use(passport.initialize());
@@ -164,6 +163,7 @@ app.use((err, req, res, next) => {
   res.status(statusCode).render("error", { err });
 });
 
-app.listen(3000, () => {
-  console.log("serving on http://localhost:3000");
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`Serving on http://localhost:${port}`);
 });
