@@ -54,10 +54,12 @@ app.use(methodOverride("_method"));
 app.use(morgan("tiny"));
 app.use(express.static(path.join(__dirname, "public")));
 
+const secretKey = process.env.SECRET_KEY || 'thisisabetterser'
+
 // Session setting & flash
 const store = new MongoStore({
   mongoUrl: dbUrl,
-  secret: "thisisabetterser",
+  secret: secretKey,
   touchAfter: 60 * 60
 })
 
@@ -68,7 +70,7 @@ store.on('error', function (err) {
 const sessionConfig = {
   store,
   name: "session",
-  secret: "thisisabetterser",
+  secret: secretKey,
   resave: false,
   saveUninitialized: true,
   cookie: {
