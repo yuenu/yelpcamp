@@ -9,11 +9,13 @@ const mongoose = require("mongoose");
 const methodOverride = require("method-override");
 const morgan = require("morgan");
 const ejsMate = require("ejs-mate");
+const mongoSanitize = require("express-mongo-sanitize");
 
 const session = require("express-session");
 const flash = require("connect-flash");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
+const helmet = require("helmet");
 
 const ExpressError = require("./utils/ExpressError");
 
@@ -53,6 +55,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // Session setting & flash
 const sessionConfig = {
+  name: "session",
   secret: "thisisabetterser",
   resave: false,
   saveUninitialized: true,
@@ -65,6 +68,49 @@ const sessionConfig = {
 };
 app.use(session(sessionConfig));
 app.use(flash());
+app.use(mongoSanitize({contentSecurityPolicy: false}));
+
+// Helmet
+app.use(helmet())
+const scriptSrcUrls = [
+  "https://api.mapbox.com",
+  "https://cdnjs.cloudflare.com",
+  "https://cdn.jsdelivr.net",
+];
+const styleSrcUrls = [
+  "https://api.mapbox.com",
+  "https://fonts.googleapis.com",
+  "https://cdn.jsdelivr.net",
+];
+const connectSrcUrls = [
+  "https://api.mapbox.com",
+  "https://*.tiles.mapbox.com",
+  "https://events.mapbox.com",
+];
+const fontSrcUrls = [];
+app.use(
+  helmet.contentSecurityPolicy({
+      directives: {
+          defaultSrc: [],
+          connectSrc: ["'self'", ...connectSrcUrls],
+          scriptSrc: ["'unsafe-inline'", "'self'", ...scriptSrcUrls],
+          styleSrc: ["'self'", "'unsafe-inline'", ...styleSrcUrls],
+          workerSrc: ["'self'", "blob:"],
+          childSrc: ["blob:"],
+          objectSrc: [],
+          imgSrc: [
+              "'self'",
+              "blob:",
+              "data:",
+              "https://res.cloudinary.com/dojhkxto5/", //SHOULD MATCH YOUR CLOUDINARY ACCOUNT! 
+              "https://images.unsplash.com",
+              "https://source.unsplash.com",
+          ],
+          fontSrc: ["'self'", ...fontSrcUrls],
+      },
+  })
+);
+
 
 // Passport
 app.use(passport.initialize());
@@ -75,6 +121,7 @@ passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
 app.use((req, res, next) => {
+  console.log(req.query);
   if (!["/login", "/register", ""].includes(req.originalUrl)) {
     req.session.returnTo = req.originalUrl;
   }
@@ -100,7 +147,7 @@ app.all("*", (req, res, next) => {
 // handel error message
 app.use((err, req, res, next) => {
   const { statusCode = 500, message = "Something went wrong" } = err;
-  res.status(statusCode).render("error", { message });
+  res.status(statusCode).render("error", { err });
 });
 
 app.listen(3000, () => {
