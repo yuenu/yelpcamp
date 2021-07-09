@@ -18,6 +18,7 @@ const LocalStrategy = require("passport-local");
 const helmet = require("helmet");
 
 const ExpressError = require("./utils/ExpressError");
+const MongoStore = require('connect-mongo');
 
 // Model
 const User = require("./models/user");
@@ -27,8 +28,8 @@ const campgroundsRouter = require("./routes/campgrounds");
 const reviewsRouter = require("./routes/reviews");
 const userRouter = require("./routes/users");
 
-const url = process.env.dbUrl;
-mongoose.connect(url, {
+const dbUrl = process.env.dbUrl;
+mongoose.connect(dbUrl, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   useFindAndModify: false,
@@ -54,7 +55,18 @@ app.use(morgan("tiny"));
 app.use(express.static(path.join(__dirname, "public")));
 
 // Session setting & flash
+const store = new MongoStore({
+  mongoUrl: dbUrl,
+  secret: "thisisabetterser",
+  touchAfter: 60 * 60
+})
+
+store.on('error', function (err) {
+  console.log('SESSION STORE ERROR', err)
+})
+
 const sessionConfig = {
+  store,
   name: "session",
   secret: "thisisabetterser",
   resave: false,
@@ -68,7 +80,7 @@ const sessionConfig = {
 };
 app.use(session(sessionConfig));
 app.use(flash());
-app.use(mongoSanitize({contentSecurityPolicy: false}));
+app.use(mongoSanitize());
 
 // Helmet
 app.use(helmet())
@@ -144,7 +156,7 @@ app.all("*", (req, res, next) => {
   next(new ExpressError("Page Not Found", 404));
 });
 
-// handel error message
+// Handel error message
 app.use((err, req, res, next) => {
   const { statusCode = 500, message = "Something went wrong" } = err;
   res.status(statusCode).render("error", { err });
